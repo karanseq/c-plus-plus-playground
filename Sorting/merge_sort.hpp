@@ -1,8 +1,12 @@
 #include <assert.h>
 #include <vector>
 
+// TODO
+// Make use of a single temporary array that gets passed down recursively
+// instead of creating new vectors for each merge.
+
 template<typename T>
-void Merge(std::vector<T>& o_placeholder, std::vector<T>& io_array, size_t i_lower, size_t i_mid, size_t i_upper, int i_tabs = 0)
+void Merge(std::vector<T>& io_array, size_t i_lower, size_t i_mid, size_t i_upper, int i_tabs = 0)
 {
 	using namespace std;
 
@@ -48,7 +52,7 @@ void Merge(std::vector<T>& o_placeholder, std::vector<T>& io_array, size_t i_low
 }
 
 template<typename T>
-void Split(std::vector<T>& o_placeholder, std::vector<T>& i_array, size_t i_lower, size_t i_upper, int i_tabs = 0)
+void Split(std::vector<T>& i_array, size_t i_lower, size_t i_upper, int i_tabs = 0)
 {
 	if (i_lower == i_upper)
 	{
@@ -68,8 +72,6 @@ void MergeSort(const size_t i_size, std::vector<T>& io_array)
 	assert(i_size > 1);
 
 	using namespace std;
-	vector<T> placeholder;
-	placeholder.reserve(i_size);
 
 	Split(placeholder, io_array, 0, i_size - 1);
 }

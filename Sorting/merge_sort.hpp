@@ -61,9 +61,9 @@ void Split(std::vector<T>& i_array, size_t i_lower, size_t i_upper, int i_tabs =
 
 	size_t mid = (i_lower + i_upper) >> 1;
 
-	Split(o_placeholder, i_array, i_lower, mid, i_tabs + 1);
-	Split(o_placeholder, i_array, mid + 1, i_upper, i_tabs + 1);
-	Merge(o_placeholder, i_array, i_lower, mid, i_upper, i_tabs + 1);
+	Split(i_array, i_lower, mid, i_tabs + 1);
+	Split(i_array, mid + 1, i_upper, i_tabs + 1);
+	Merge(i_array, i_lower, mid, i_upper, i_tabs + 1);
 }
 
 template<typename T>
@@ -73,5 +73,5 @@ void MergeSort(const size_t i_size, std::vector<T>& io_array)
 
 	using namespace std;
 
-	Split(placeholder, io_array, 0, i_size - 1);
+	Split(io_array, 0, i_size - 1);
 }

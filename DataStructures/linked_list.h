@@ -11,11 +11,18 @@ struct LinkNode
     T                       data;
 };
 
+// forward declaration
+template<typename T>
+class LinkedList;
+
 template<typename T>
 class LinkIterator
 {
 public:
     explicit LinkIterator(std::nullptr_t) : node_(nullptr)
+    {}
+
+    LinkIterator() : node_(nullptr)
     {}
 
     LinkIterator(LinkNode<T>* i_node) : node_(i_node)
@@ -30,11 +37,13 @@ public:
     inline LinkIterator& operator=(const LinkIterator& i_other)
     {
         node_ = i_other.node_;
+        return *this;
     }
 
     inline LinkIterator& operator=(LinkNode<T>* i_node)
     {
         node_ = i_node;
+        return *this;
     }
 
     inline operator bool() const
@@ -90,6 +99,8 @@ public:
 private:
     LinkNode<T>*            node_;
 
+    friend class LinkedList<T>;
+
 }; // class LinkIterator
 
 template<typename T>
@@ -113,15 +124,10 @@ public:
     LinkedList(const LinkedList&) = delete;
     LinkedList& operator=(const LinkedList&) = delete;
 
-    void PushFront(T i_data)
+    void PushFront(const T& i_data)
     {
-        LinkNode<T> *node = new LinkNode<T>;
-        assert(node);
-
-        node->data = i_data;
+        LinkNode<T> *node = Node(i_data);
         node->next = head_;
-        node->prev = nullptr;
-        ++size_;
 
         if (head_)
         {
@@ -157,15 +163,10 @@ public:
         --size_;
     }
 
-    void PushBack(T i_data)
+    void PushBack(const T& i_data)
     {
-        LinkNode<T> *node = new LinkNode<T>;
-        assert(node);
-
-        node->data = i_data;
-        node->next = nullptr;
+        LinkNode<T> *node = Node(i_data);
         node->prev = tail_;
-        ++size_;
 
         if (tail_)
         {
@@ -201,6 +202,19 @@ public:
         --size_;
     }
 
+    inline void Insert(LinkIterator<T>& i_iterator, const T& i_data)
+    {
+        assert(i_iterator);
+        Insert(i_iterator.node_, i_data);
+    }
+
+    inline void Erase(LinkIterator<T>& i_iterator)
+    {
+        assert(i_iterator);
+        Erase(i_iterator.node_);
+        i_iterator = nullptr;
+    }
+
     inline LinkIterator<T> Begin() const
     {
         return LinkIterator<T>(head_);
@@ -222,6 +236,70 @@ public:
     }
 
     inline size_t GetSize() const { return size_; }
+
+private:
+    inline LinkNode<T>* Node(const T& i_data)
+    {
+        LinkNode<T>* node = new LinkNode<T>;
+        assert(node);
+
+        node->prev = nullptr;
+        node->next = nullptr;
+        node->data = i_data;
+        
+        ++size_;
+        
+        return node;
+    }
+
+    void Insert(LinkNode<T>* i_node, const T& i_data)
+    {
+        assert(i_node);
+
+        if (i_node == head_)
+        {
+            PushFront(i_data);
+            return;
+        }
+
+        LinkNode<T>* node = Node(i_data);
+        node->next = i_node;
+        node->prev = i_node->prev;
+
+        if (i_node->prev)
+        {
+            i_node->prev->next = node;
+        }
+        i_node->prev = node;
+    }
+
+    void Erase(LinkNode<T>* i_node)
+    {
+        assert(i_node);
+
+        if (i_node == head_)
+        {
+            head_ = i_node->next;
+        }
+
+        if (i_node == tail_)
+        {
+            tail_ = i_node->prev;
+        }
+
+        if (i_node->prev)
+        {
+            i_node->prev->next = i_node->next;
+        }
+
+        if (i_node->next)
+        {
+            i_node->next->prev = i_node->prev;
+        }
+
+        delete i_node;
+        --size_;
+    }
 
 private:
     LinkNode<T>*            head_;

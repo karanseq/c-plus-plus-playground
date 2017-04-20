@@ -6,20 +6,6 @@
 
 #include "linked_list.h"
 
-uint32_t GetHash(const char* i_key)
-{
-    assert(i_key);
-
-    uint32_t hash = 0;
-    uint32_t i = 0;
-    while ((i_key + i) != nullptr && *(i_key + i) != '\0')
-    {
-        hash = (hash * 256 + int(*(i_key + i)));
-        ++i;
-    }
-    return hash;
-}
-
 template<typename T>
 struct HashItem
 {
@@ -28,14 +14,24 @@ struct HashItem
 };
 
 template<typename T>
+struct HashFunc
+{
+    HashFunc(uint32_t(*Func)(T)) : GetHash(Func)
+    {}
+
+    uint32_t (*GetHash)(T);
+};
+
+template<typename Key, typename Value>
 class HashTable
 {
 public:
-    HashTable(size_t i_buckets) : buckets_(nullptr),
+    HashTable(size_t i_buckets, HashFunc<Key> i_hash_function) : buckets_(nullptr),
+        hash_function_(i_hash_function),
         num_buckets_(i_buckets),
         num_elements_(0)
     {
-        buckets_ = new LinkedList<HashItem<T>>[i_buckets];
+        buckets_ = new LinkedList<HashItem<Value>>[i_buckets];
     }
 
     ~HashTable()
@@ -44,12 +40,16 @@ public:
         buckets_ = nullptr;
     }
 
-    void Insert(const char* i_key, T i_value)
+    // TODO: Add copy & move constructors and assignment operators
+    HashTable(const HashTable&) = delete;
+    HashTable& operator=(const HashTable&) = delete;
+
+    void Insert(Key i_key, Value i_value)
     {
         assert(i_key);
 
-        HashItem<T> item;
-        item.hash = GetHash(i_key);
+        HashItem<Value> item;
+        item.hash = hash_function_.GetHash(i_key);
         item.value = i_value;
 
         const size_t bucket_index = item.hash % num_buckets_;
@@ -58,17 +58,17 @@ public:
         ++num_elements_;
     }
 
-    void Remove(const char* i_key, T i_value)
+    void Remove(Key i_key, Value i_value)
     {
         assert(i_key);
 
-        const uint32_t hash = GetHash(i_key);
+        const uint32_t hash = hash_function_.GetHash(i_key);
         const size_t bucket_index = hash % num_buckets_;
 
-        LinkIterator<HashItem<T>> it = buckets_[bucket_index].Front();
+        LinkIterator<HashItem<Value>> it = buckets_[bucket_index].Front();
         while (it)
         {
-            HashItem<T> item = *it;
+            HashItem<Value> item = *it;
             if (item.hash == hash && item.value == i_value)
             {
                 buckets_[bucket_index].Remove(it);
@@ -80,17 +80,17 @@ public:
         }
     }
 
-    bool Find(const char* i_key, T& o_value) const
+    bool Find(Key i_key, Value& o_value) const
     {
         assert(i_key);
 
-        const uint32_t hash = GetHash(i_key);
+        const uint32_t hash = hash_function_.GetHash(i_key);
         const size_t bucket_index = hash % num_buckets_;
 
-        LinkIterator<HashItem<T>> it = buckets_[bucket_index].Front();
+        LinkIterator<HashItem<Value>> it = buckets_[bucket_index].Front();
         while (it)
         {
-            HashItem<T> item = *it;
+            HashItem<Value> item = *it;
             if (item.hash == hash)
             {
                 o_value = item.value;
@@ -107,7 +107,8 @@ public:
     inline size_t GetElementCount() const { return num_elements_; }
 
 private:
-    LinkedList<HashItem<T>>*                buckets_;
+    LinkedList<HashItem<Value>>*            buckets_;
+    HashFunc<Key>                           hash_function_;
     size_t                                  num_buckets_;
     size_t                                  num_elements_;
 

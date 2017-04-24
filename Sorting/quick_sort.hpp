@@ -21,7 +21,7 @@ int32_t Partition(std::vector<T>& io_array, const int32_t i_low, const int32_t i
 	while (1)
 	{
 		// from the left, search for any element that is greater than or equal to pivot
-		while (io_array[low_index] < i_pivot_value)
+		while (low_index <= high_index && io_array[low_index] < i_pivot_value)
 		{
 			++low_index;
 		}
